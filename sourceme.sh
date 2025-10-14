@@ -6,3 +6,9 @@ else
 fi
 
 export PATH=$SDK_HOME/install/bin:$PATH
+export PYTHONPATH=$SDK_HOME/install/python:$PYTHONPATH
+
+##############################################################################
+## 				Envirment Parameters for DRAMSys Integration 				##
+##############################################################################
+export LD_LIBRARY_PATH=$SDK_HOME/third_party/DRAMSys:$LD_LIBRARY_PATH
