@@ -1,9 +1,9 @@
 [submodule "core"]
-	path = gvsoc-core
+	path = core
 	url = git@github.com:FondazioneChipsIT/gvsoc-core.git
 	branch = chips-it
 [submodule "pulp"]
-	path = gvsoc-pulp
+	path = pulp
 	url = git@github.com:FondazioneChipsIT/gvsoc-pulp.git
 	branch = chips-it
 [submodule "gvtest"]
