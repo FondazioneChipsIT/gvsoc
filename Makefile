@@ -6,6 +6,7 @@ CMAKE ?= cmake
 TARGETS ?= rv64 \
     rv64_untimed \
     pulp-open \
+    pulp-open-nn \
     pulp-open:chip/cluster/redmule=True \
     pulp.spatz.spatz \
     snitch_spatz \
@@ -17,7 +18,8 @@ TARGETS ?= rv64 \
     snitch:core_type=fast \
     pulp.snitch.snitch_cluster_single \
     chimera \
-    snitch_testbench
+    snitch_testbench \
+    magia
 
 ifndef BUILDDIR
 ifdef GVSOC_WORKDIR
@@ -73,7 +75,7 @@ clean:
 	rm -rf $(BUILDDIR) $(INSTALLDIR)
 
 github.test:
-	gvtest --testset testset-github.cfg --max-timeout 60 --no-fail run table junit
+	gvtest --testset testset-github.cfg --max-timeout 120 --no-fail run table junit
 
 riscv:
 	wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2025.01.17/riscv64-elf-ubuntu-22.04-gcc-nightly-2025.01.17-nightly.tar.xz

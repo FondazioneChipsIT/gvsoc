@@ -2,22 +2,8 @@ BENDER_VERSION = 0.28.1
 UBUNTU_VERSION = 22.04
 TIMEOUT ?= 60
 
-TEST_TARGETS ?= \
-    pulp-open \
-    chimera \
-    snitch \
-    snitch:core_type=fast \
-    snitch_cluster_single \
-    siracusa \
-    rv64 \
-    occamy \
-    spatz \
-    ara \
-    snitch_spatz \
-    snitch_testbench
-
 GVTEST_TARGET_FLAGS = $(foreach t,$(TEST_TARGETS),--target $(t))
-GVTEST_CMD = gvtest $(GVTEST_TARGET_FLAGS) --max-timeout $(TIMEOUT) run table junit summary
+GVTEST_CMD = gvtest $(GVTEST_TARGET_FLAGS) --dump-all --max-timeout $(TIMEOUT) run table junit summary
 
 
 
@@ -53,9 +39,28 @@ test.checkout.pulp-sdk:
 	fi
 	cd "tests/pulp-sdk" && \
 	git fetch --all && \
-	git checkout 14474647174d124fe60bee3874d509758925b61f
+	git checkout 7c407695ac48401f0e1ebcdd4a4cc9c67e81138e
 
 test.build.pulp-sdk: test.checkout.pulp-sdk
+
+
+
+#
+# PULP-SDK Siracusa
+#
+
+test.clean.pulp-sdk-siracusa:
+	rm -rf tests/pulp-sdk-siracusa
+
+test.checkout.pulp-sdk-siracusa:
+	@if [ ! -d "tests/pulp-sdk-siracusa" ]; then \
+		git clone "git@github.com:siracusa-soc/pulp-sdk.git" "tests/pulp-sdk-siracusa"; \
+	fi
+	cd "tests/pulp-sdk-siracusa" && \
+	git fetch --all && \
+	git checkout 597e0ebb12b4c7d609bdd2b09452c1f9d80031be
+
+test.build.pulp-sdk-siracusa: test.checkout.pulp-sdk-siracusa
 
 
 
@@ -144,13 +149,78 @@ test.build.ara: test.checkout.ara
 	cd tests/ara-rtl/apps && make riscv_tests GCC_INSTALL_DIR=$(RISCV_GCC) LLVM_INSTALL_DIR=$(ARA_LLVM)
 
 
+#
+# Magia SDK
+#
+
+test.clean.magia:
+	rm -rf tests/magia-sdk
+
+test.checkout.magia:
+	@if [ ! -d "tests/magia-sdk" ]; then \
+		git clone "git@github.com:haugoug/magia-sdk.git" "tests/magia-sdk"; \
+	fi
+	cd "tests/magia-sdk" && \
+	git fetch --all && \
+	git checkout f663315d4c2ce521a5dd4ae9d08b24f2b957f100
+
+test.build.magia: test.checkout.magia
+	rm -rf $(CURDIR)/tests/magia-sdk/build
+	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=2 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile2
+	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=4 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile4
+	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=8 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile8
 
 
-test.clean: test.clean.riscv-tests test.clean.pulp-sdk test.clean.chimera-sdk test.clean.snitch test.clean.spatz test.clean.ara
 
-test.checkout: test.checkout.riscv-tests test.checkout.pulp-sdk test.checkout.chimera-sdk test.checkout.snitch test.checkout.spatz test.checkout.ara
+#
+# Pulp-NN
+#
 
-test.build: test.build.riscv-tests test.build.pulp-sdk test.build.chimera-sdk test.build.snitch test.build.spatz test.build.ara
+test.clean.pulp-nn:
+	rm -rf tests/pulp-nn
+
+test.checkout.pulp-nn:
+	@if [ ! -d "tests/pulp-nn" ]; then \
+		git clone "git@github.com:pulp-platform/pulp-nn-mixed.git" "tests/pulp-nn"; \
+	fi
+	cd "tests/pulp-nn" && \
+	git fetch --all && \
+	git checkout 415279ec37ef416fe43ded0e476c3fae3d17a6c8
+
+test.build.pulp-nn: test.checkout.pulp-nn
+	cd tests/pulp-nn/generators && python3 pulp_nn_examples_generator.py
+
+
+
+#
+# Mempool
+#
+
+test.clean.mempool:
+	rm -rf tests/mempool
+
+test.checkout.mempool:
+	@if [ ! -d "tests/mempool" ]; then \
+		git clone "git@github.com:pulp-platform/mempool.git" "tests/mempool"; \
+	fi
+	cd "tests/mempool" && \
+	git fetch --all && \
+	git checkout 84ab19ca74a421dc1c4fedbb88fd839ba9d25ffc && \
+	git submodule update --recursive --init
+
+test.build.mempool: test.checkout.mempool
+
+
+
+test.clean: test.clean.riscv-tests test.clean.pulp-sdk test.clean.chimera-sdk test.clean.snitch \
+	test.clean.spatz test.clean.ara test.clean.magia test.clean.pulp-nn test.clean.pulp-sdk-siracusa
+
+test.checkout: test.checkout.riscv-tests test.checkout.pulp-sdk test.checkout.chimera-sdk \
+	test.checkout.snitch test.checkout.spatz test.checkout.ara test.checkout.magia \
+	test.checkout.pulp-nn test.checkout.pulp-sdk-siracusa
+
+test.build: test.build.riscv-tests test.build.pulp-sdk test.build.chimera-sdk test.build.snitch \
+	test.build.spatz test.build.ara test.build.magia test.build.pulp-nn test.build.pulp-sdk-siracusa
 
 test.run:
 	$(GVTEST_CMD)
