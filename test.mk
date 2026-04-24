@@ -15,10 +15,10 @@ test.clean.riscv-tests:
 	rm -rf tests/riscv-tests
 
 test.checkout.riscv-tests:
-	@if [ ! -d "tests/riscv-tests" ]; then \
-		git clone "git@github.com:gvsoc/riscv-tests.git" "tests/riscv-tests"; \
+	@if [ ! -d "tests/rv64/riscv-tests" ]; then \
+		git clone "git@github.com:gvsoc/riscv-tests.git" "tests/rv64/riscv-tests"; \
 	fi
-	cd "tests/riscv-tests" && \
+	cd "tests/rv64/riscv-tests" && \
 	git fetch --all && \
 	git checkout 934ec4f4bb14f83da32cd83dcc00afa055e8717f
 
@@ -39,7 +39,7 @@ test.checkout.pulp-sdk:
 	fi
 	cd "tests/pulp-sdk" && \
 	git fetch --all && \
-	git checkout fc996a4bb817d0fed09701ef0eb42ffe8b4d6328
+	git checkout d4b5bcdd6e416a402a6e22a3e04f29402424cb21
 
 test.build.pulp-sdk: test.checkout.pulp-sdk
 
@@ -53,10 +53,10 @@ test.clean.pulp-sdk-siracusa:
 	rm -rf tests/pulp-sdk-siracusa
 
 test.checkout.pulp-sdk-siracusa:
-	@if [ ! -d "tests/pulp-sdk-siracusa" ]; then \
-		git clone "git@github.com:siracusa-soc/pulp-sdk.git" "tests/pulp-sdk-siracusa"; \
+	@if [ ! -d "tests/siracusa/pulp-sdk-siracusa" ]; then \
+		git clone "git@github.com:siracusa-soc/pulp-sdk.git" "tests/siracusa/pulp-sdk-siracusa"; \
 	fi
-	cd "tests/pulp-sdk-siracusa" && \
+	cd "tests/siracusa/pulp-sdk-siracusa" && \
 	git fetch --all && \
 	git checkout 11121ab42fdf0e9d1ff379dcba0ee22bd1fa1d3d
 
@@ -72,16 +72,16 @@ test.clean.chimera-sdk:
 	rm -rf tests/chimera-sdk
 
 test.checkout.chimera-sdk:
-	@if [ ! -d "tests/chimera-sdk" ]; then \
-		git clone "git@github.com:pulp-platform/chimera-sdk.git" "tests/chimera-sdk"; \
+	@if [ ! -d "tests/chimera-sdk/chimera-sdk" ]; then \
+		git clone "git@github.com:pulp-platform/chimera-sdk.git" "tests/chimera-sdk/chimera-sdk"; \
 	fi
-	cd "tests/chimera-sdk" && \
+	cd "tests/chimera-sdk/chimera-sdk" && \
 	git fetch --all && \
 	git checkout b2392f6efcff75c03f4c65eaf3e12104442b22ea
 
 test.build.chimera-sdk: test.checkout.chimera-sdk
-	cd tests/chimera-sdk && cmake -DTARGET_PLATFORM=chimera-open -DTOOLCHAIN_DIR=$(CHIMERA_LLVM) -B build
-	cd tests/chimera-sdk && cmake --build build -j
+	cd tests/chimera-sdk/chimera-sdk && cmake -DTARGET_PLATFORM=chimera-open -DTOOLCHAIN_DIR=$(CHIMERA_LLVM) -B build
+	cd tests/chimera-sdk/chimera-sdk && cmake --build build -j
 
 
 
@@ -93,19 +93,19 @@ test.clean.snitch:
 	rm -rf tests/snitch
 
 test.checkout.snitch:
-	@if [ ! -d "tests/snitch" ]; then \
-		git clone "git@github.com:haugoug/snitch_cluster.git" "tests/snitch"; \
+	@if [ ! -d "tests/snitch/snitch" ]; then \
+		git clone "git@github.com:haugoug/snitch_cluster.git" "tests/snitch/snitch"; \
 	fi
-	cd "tests/snitch" && \
+	cd "tests/snitch/snitch" && \
 	git fetch --all && \
 	git checkout 4a2fb73b2c948958f47f7109bcb34943dcd79c14 && \
 	git submodule update --recursive --init
 
 test.build.snitch: test.checkout.snitch
-	cd tests/snitch && mkdir -p install/bin && cd install/bin && wget https://github.com/pulp-platform/bender/releases/download/v$(BENDER_VERSION)/bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz && \
+	cd tests/snitch/snitch && mkdir -p install/bin && cd install/bin && wget https://github.com/pulp-platform/bender/releases/download/v$(BENDER_VERSION)/bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz && \
 		tar xzf bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz
-	cd tests/snitch && pip install .
-	export PATH=$(LLVM_BINROOT):$(CURDIR)/tests/snitch/install/bin:$(PATH) && cd tests/snitch/target/snitch_cluster && $(MAKE) DEBUG=ON OPENOCD_SEMIHOSTING=ON bin/snitch_cluster.gvsoc sw
+	cd tests/snitch/snitch && pip install .
+	export PATH=$(LLVM_BINROOT):$(CURDIR)/tests/snitch/snitch/install/bin:$(PATH) && cd tests/snitch/snitch/target/snitch_cluster && $(MAKE) DEBUG=ON OPENOCD_SEMIHOSTING=ON bin/snitch_cluster.gvsoc sw
 
 
 #
@@ -113,21 +113,23 @@ test.build.snitch: test.checkout.snitch
 #
 
 test.clean.spatz:
-	rm -rf tests/spatz-rtl
+	rm -rf tests/spatz/spatz-rtl
 
 test.checkout.spatz:
-	@if [ ! -d "tests/spatz-rtl" ]; then \
-		git clone "git@github.com:haugoug/spatz.git" "tests/spatz-rtl"; \
+	@if [ ! -d "tests/spatz/spatz-rtl" ]; then \
+		git clone "git@github.com:haugoug/spatz.git" "tests/spatz/spatz-rtl"; \
 	fi
-	cd "tests/spatz-rtl" && \
+	cd "tests/spatz/spatz-rtl" && \
 	git fetch --all && \
 	git checkout b6ebc48d845b3304e5dad94e7eb24ab3c84e997b
+	# This was committed by mistake and prevents from generating rom
+	rm -f tests/spatz/spatz-rtl/hw/system/spatz_cluster/src/generated/spatz_cluster_wrapper.sv
 
 test.build.spatz:
-	cd tests/spatz-rtl && mkdir -p install/bin && cd install/bin && wget https://github.com/pulp-platform/bender/releases/download/v$(BENDER_VERSION)/bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz && \
+	cd tests/spatz/spatz-rtl && mkdir -p install/bin && cd install/bin && wget https://github.com/pulp-platform/bender/releases/download/v$(BENDER_VERSION)/bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz && \
 		tar xzf bender-$(BENDER_VERSION)-x86_64-linux-gnu-ubuntu$(UBUNTU_VERSION).tar.gz
-	cd tests/spatz-rtl && $(MAKE) sw/toolchain/riscv-opcodes BENDER=$(CURDIR)/tests/spatz-rtl/install/bin/bender
-	unset CMAKE_GENERATOR && export PATH=$(LLVM_BINROOT):$(CURDIR)/tests/snitch/install/bin:$(PATH) && cd tests/spatz-rtl/hw/system/spatz_cluster && $(MAKE) sw.vsim TESTS_FLAGS=-DRUNTIME_PRINT=ON GCC_INSTALL_DIR=$(SPATZ_GCC) VSIM_HOME=$(VSIM_HOME) BENDER=$(CURDIR)/tests/spatz-rtl/install/bin/bender CMAKE=cmake VSIM=vsim VLOG=vlog LLVM_INSTALL_DIR=$(SPATZ_LLVM) -j1
+	cd tests/spatz/spatz-rtl && $(MAKE) sw/toolchain/riscv-opcodes BENDER=$(CURDIR)/tests/spatz/spatz-rtl/install/bin/bender
+	unset CMAKE_GENERATOR && export PATH=$(LLVM_BINROOT):$(CURDIR)/tests/snitch/install/bin:$(PATH) && cd tests/spatz/spatz-rtl/hw/system/spatz_cluster && $(MAKE) sw.vsim TESTS_FLAGS=-DRUNTIME_PRINT=ON GCC_INSTALL_DIR=$(SPATZ_GCC) VSIM_HOME=$(VSIM_HOME) BENDER=$(CURDIR)/tests/spatz/spatz-rtl/install/bin/bender CMAKE=cmake VSIM=vsim VLOG=vlog LLVM_INSTALL_DIR=$(SPATZ_LLVM) -j1
 
 
 #
@@ -135,18 +137,18 @@ test.build.spatz:
 #
 
 test.clean.ara:
-	rm -rf tests/ara-rtl
+	rm -rf tests/ara/ara-rtl
 
 test.checkout.ara:
-	@if [ ! -d "tests/ara-rtl" ]; then \
-		git clone "git@github.com:pulp-platform/ara.git" "tests/ara-rtl"; \
+	@if [ ! -d "tests/ara/ara-rtl" ]; then \
+		git clone "git@github.com:pulp-platform/ara.git" "tests/ara/ara-rtl"; \
 	fi
-	cd "tests/ara-rtl" && \
+	cd "tests/ara/ara-rtl" && \
 	git fetch --all && \
 	git checkout 05c1616d2317d2fda09b3fdf69e8aae4c2e55eaf
 
 test.build.ara: test.checkout.ara
-	cd tests/ara-rtl/apps && make riscv_tests GCC_INSTALL_DIR=$(RISCV_GCC) LLVM_INSTALL_DIR=$(ARA_LLVM)
+	cd tests/ara/ara-rtl/apps && make riscv_tests GCC_INSTALL_DIR=$(RISCV_GCC) LLVM_INSTALL_DIR=$(ARA_LLVM)
 
 
 #
@@ -162,13 +164,15 @@ test.checkout.magia:
 	fi
 	cd "tests/magia-sdk" && \
 	git fetch --all && \
-	git checkout 3530f338042b7f10b564171112f5ebf8b7222196
+	git checkout ac3e726cbf189f2107c58d5ca1553205e54daf54
 
 test.build.magia: test.checkout.magia
 	rm -rf $(CURDIR)/tests/magia-sdk/build
+	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=1 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile1
 	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=2 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile2
 	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=4 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile4
 	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=8 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile8
+	export PATH=$(MAGIA_GCC_TOOLCHAIN)/bin:$(PATH) && cd tests/magia-sdk && $(MAKE) build compiler=GCC_PULP tiles=16 CMAKE_BUILDDIR=$(CURDIR)/tests/magia-sdk/build/tile16
 
 
 

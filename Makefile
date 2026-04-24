@@ -3,6 +3,8 @@ include test.mk
 CMAKE_FLAGS ?= -j 16
 CMAKE ?= cmake
 
+ifeq ($(TARGETS),)
+
 TARGETS ?= rv64 \
     rv64_untimed \
     pulp-open \
@@ -21,8 +23,18 @@ TARGETS ?= rv64 \
     pulp.snitch.snitch_cluster_single \
     chimera \
     snitch_testbench \
-    magia \
+    magia_v2 \
 	mempool
+
+RUN_TARGETS = $(TARGETS) default
+
+else
+
+RUN_TARGETS = $(TARGETS)
+
+endif
+
+GVTEST_TARGET_FLAGS = $(foreach t,$(subst ;, ,$(RUN_TARGETS)),--target $(t))
 
 ifndef BUILDDIR
 ifdef GVSOC_WORKDIR
@@ -72,7 +84,7 @@ build: gvrun.build
 	# Change directory to curdir to avoid issue with symbolic links
 	cd $(CURDIR) && $(CMAKE) -S . -B $(BUILDDIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
 		-DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) \
-		-DGVSOC_MODULES="$(CURDIR)/core/models;$(CURDIR)/pulp;$(CURDIR)/pulp/targets;$(CURDIR)/gvrun/python;$(CURDIR)/config_tree;$(MODULES)" \
+		-DGVSOC_MODULES="$(CURDIR)/engine/python;$(CURDIR)/core/models;$(CURDIR)/pulp;$(CURDIR)/pulp/targets;$(CURDIR)/gvrun/python;$(CURDIR)/config_tree;$(MODULES)" \
 		-DGVSOC_TARGETS="${TARGETS}" \
 		-DCMAKE_SKIP_INSTALL_RPATH=false
 
@@ -84,7 +96,7 @@ clean:
 	rm -rf $(BUILDDIR) $(INSTALLDIR)
 
 github.test:
-	gvtest --testset testset-github.cfg --max-timeout 120 --no-fail run table junit
+	gvtest $(GVTEST_TARGET_FLAGS) --testset testset-github.cfg --max-timeout 120 --no-fail run table junit
 
 riscv:
 	wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2025.01.17/riscv64-elf-ubuntu-22.04-gcc-nightly-2025.01.17-nightly.tar.xz
@@ -178,6 +190,6 @@ gui:
 	fi
 	cd "gui-release" && \
 	git fetch --all && \
-	git checkout de4b7d90f82725b0ac737b0811514df9505ba2c8
+	git checkout f2c09bd5775957543ccd8c641e6f8441639b52ae
 	mkdir -p $(INSTALLDIR)
 	cp -r gui-release/* $(INSTALLDIR)
